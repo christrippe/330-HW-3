@@ -20,7 +20,7 @@ Droughts are a big problem in California. Stream runoff from snowfall is one sou
 
 ```{r}
 ##read in data
-dist_data <- read.table(file = "water.txt", header = TRUE, sep = "")
+water_data <- read.table(file = "water.txt", header = TRUE, sep = "")
 ```
 
 2. Using exploratory techniques (don’t actually fit a model), explore the data to assess if a simple
@@ -30,7 +30,7 @@ successful at achieving the goals of the study.
 
 ```{r}
 ##linear?
-cor(dist_data$Speed, dist_data$Distance)
+ggplot(water_data, aes(Precip, Runoff)) + geom_point()
 
 
 ```
@@ -41,6 +41,22 @@ in your model. Using the mathematical form, discuss how your model, after fittin
 data, will be able to answer the questions in this problem.
 
 ```{r}
+
+slr_transform <- lm(log(Runoff) ~ (Precip), water_data)
+
+bptest(slr_transform)
+ks.test(stdres(slr_transform),"pnorm" )
+cook_dist <- cooks.distance(slr_transform)
+outliers <- which(cook_dist > 4/length(cook_dist))
+plot(cook_dist, type="h", main = "Cook's Distance")
+abline(h = 4/length(cook_dist), col = "red")
+
+
+hist(stdres(slr_transform))
+
+ggplot(data = slr_transform, aes(x = slr_transform$fitted.values, y = slr_transform$residuals)) +
+  geom_point() + ylab("Residuals") + xlab("Fitted Values") +
+  geom_hline(yintercept = 0)
 
 ```
 
