@@ -1,0 +1,78 @@
+---
+title: "330-HW-3"
+author: "Chris Trippe"
+date: "10/5/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. In your own words, summarize the overarching problem and any specific questions that need to be
+answered using the water data. Discuss how statistical modeling will be able to answer the posed
+questions.
+
+```{r}
+
+```
+
+2. Using exploratory techniques (don’t actually fit a model), explore the data to assess if a simple
+linear regression (SLR) model is suitable to analyze the water data. Justify your answer using any
+necessary graphics and relevant summary statistics that would suggest an SLR model would be
+successful at achieving the goals of the study.
+
+```{r}
+
+```
+
+3. Write out (in mathematical form with greek letters) a justifiable SLR model that would help answer
+the questions in problem. Provide an interpretation of each mathematical term (β parameter) included
+in your model. Using the mathematical form, discuss how your model, after fitting it to the
+data, will be able to answer the questions in this problem.
+
+```{r}
+
+```
+
+4. Fit your model in #3 to the water data and summarize the results by displaying the fitted model in
+equation form (do NOT just provide a screen shot of the R or Python output). Interpret each of the
+fitted parameters in the context of the problem. Provide a plot of the data with a fitted regression
+line.
+
+```{r}
+
+```
+
+5. List then justify your model assumptions using appropriate graphics or summary statistics.
+
+```{r}
+
+```
+
+6. Assess the fit and predictive capability of your model. Discuss on the level of your target audience
+(e.g. interpret your model R2
+).
+
+```{r}
+
+```
+
+7. Carry out a test that there is no relationship between snowfall and runoff (i.e., write out the hypotheses,
+report an appropriate p-value, and conclude in context).
+
+```{r}
+
+```
+
+8. Construct 95% confidence intervals for the slope and intercept parameters and interpret these intervals
+in the context of the problem.
+
+```{r}
+
+```
+
+9. In a recent winter, the site only received 4.5 inches of snowfall. What do you predict will be the
+associated runoff? Provide a 95% predictive interval and interpret the interval in the context of the
+problem. Do you have any hesitations performing this prediction (hint: you should)? Describe these
+hesitations and their potential impact on your prediction.
