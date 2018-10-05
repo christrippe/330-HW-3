@@ -8,13 +8,19 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+```{r include=FALSE}
+library(tidyverse)
+library(MASS)
+library(lmtest)
+```
 
-1. In your own words, summarize the overarching problem and any specific questions that need to be
-answered using the water data. Discuss how statistical modeling will be able to answer the posed
-questions.
+1.
+
+Droughts are a big problem in California. Stream runoff from snowfall is one source of water. A statistical model could be used to predict the expected amount of runoff in acre-feet of a river near Bishop. California by the amount of snowfall at a site in the Sierra Nevada mountains. If the amount of water entering the area is estimated, people such as engineers, planners, and policy makers will be able to do their jobs more efficiently.
 
 ```{r}
-
+##read in data
+dist_data <- read.table(file = "water.txt", header = TRUE, sep = "")
 ```
 
 2. Using exploratory techniques (don’t actually fit a model), explore the data to assess if a simple
@@ -23,6 +29,9 @@ necessary graphics and relevant summary statistics that would suggest an SLR mod
 successful at achieving the goals of the study.
 
 ```{r}
+##linear?
+cor(dist_data$Speed, dist_data$Distance)
+
 
 ```
 
