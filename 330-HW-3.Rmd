@@ -40,38 +40,58 @@ the questions in problem. Provide an interpretation of each mathematical term (Î
 in your model. Using the mathematical form, discuss how your model, after fitting it to the
 data, will be able to answer the questions in this problem.
 
-```{r}
-
-slr_transform <- lm(log(Runoff) ~ (Precip), water_data)
-
-bptest(slr_transform)
-ks.test(stdres(slr_transform),"pnorm" )
-cook_dist <- cooks.distance(slr_transform)
-outliers <- which(cook_dist > 4/length(cook_dist))
-plot(cook_dist, type="h", main = "Cook's Distance")
-abline(h = 4/length(cook_dist), col = "red")
-
-
-hist(stdres(slr_transform))
-
-ggplot(data = slr_transform, aes(x = slr_transform$fitted.values, y = slr_transform$residuals)) +
-  geom_point() + ylab("Residuals") + xlab("Fitted Values") +
-  geom_hline(yintercept = 0)
-
-```
+$$\ln({\hat{y_i}}) = \beta_0 + \beta_1x_i + \epsilon_i \text{ where } \epsilon_i \sim \mathcal{N}(\mu,\,\sigma^{2})  $$
 
 4. Fit your model in #3 to the water data and summarize the results by displaying the fitted model in
 equation form (do NOT just provide a screen shot of the R or Python output). Interpret each of the
 fitted parameters in the context of the problem. Provide a plot of the data with a fitted regression
 line.
 
-```{r}
+
+```{r include=FALSE}
+#transformed data
+slr_transform <- lm(log(Runoff) ~ (Precip), water_data)
+#Intercept and Slope values
+slr_transform$coefficients
+#creates vector of y values given coefficients for plotting the line
+slr_transform_yvalues <- (slr_transform$coefficients[1] + (slr_transform$coefficients[2] * water_data$Precip)) %>% exp()
 
 ```
+
+
+$$\ln({\hat{y_i}}) = 10.60400764 + 0.04497591 x_i $$
+or
+$${\hat{y_i}} = e^{10.60400764 + 0.04497591 x_i} $$
+
+
+```{r}
+#plots new transformed slr on original scale
+ggplot(water_data,aes(Precip, Runoff)) +geom_point() + geom_line(aes(y = slr_transform_yvalues), color = "Red")
+```
+
+
 
 5. List then justify your model assumptions using appropriate graphics or summary statistics.
 
 ```{r}
+#test for variance
+bptest(slr_transform)
+#test for normality
+ks.test(stdres(slr_transform),"pnorm" )
+#test for outliers
+cook_dist <- cooks.distance(slr_transform)
+outliers <- which(cook_dist > 4/length(cook_dist))
+plot(cook_dist, type="h", main = "Cook's Distance")
+abline(h = 4/length(cook_dist), col = "red")
+
+# 
+# stdres(slr_transform) %>% hist()
+# 
+# ggplot(data = slr_transform, aes(x = slr_transform$fitted.values, y = slr_transform$residuals)) +
+#   geom_point() + ylab("Residuals") + xlab("Fitted Values") +
+#   geom_hline(yintercept = 0)
+# 
+
 
 ```
 
@@ -80,14 +100,51 @@ line.
 ).
 
 ```{r}
+n_cv <- 1000 #number of cross validations
+bias_vec <- rep(NA, n_cv) #vector for biases
+rpmse_vec <- rep(NA, n_cv) #vector for rpmse
+n_test <- 10 #size of test set
 
+for(i in 1:n_cv){
+   
+  #choose which obs. to put in test set
+  test_obs <- sample(1:nrow(water_data), n_test)
+  
+  #Split data into test and training sets
+  test_set <- water_data[test_obs,]
+  train_set <- water_data[-test_obs,]
+  
+  #Using training data to fit a model
+  train_lm <- lm(log(Runoff)~Precip, data = train_set)
+  
+  #Predict test set
+  test_preds <- exp(predict.lm(train_lm, newdata = test_set))
+  
+  #Calculate bias
+  bias_vec[i] <- mean(test_preds - test_set$Runoff)
+  
+  #Calculate RPMSE
+  rpmse_vec[i] <- sqrt(mean((test_preds - test_set$Runoff)^2))
+}
 ```
+
+
+```{r echo=FALSE, comment=""}
+paste0("R squared equals ",summary(slr_transform)$r.squared) %>% writeLines()
+paste0("The bias is ", mean(bias_vec)) %>% writeLines()
+paste0("The root predicted mean square error is ", mean(rpmse_vec)) %>% writeLines()
+```
+
 
 7. Carry out a test that there is no relationship between snowfall and runoff (i.e., write out the hypotheses,
 report an appropriate p-value, and conclude in context).
 
 ```{r}
+#gets the summary stats of the original slr, coeffucients contains the pvalues for hypothesis test in the fourth column
 
+x <- summary(lm(Runoff~Precip,water_data))
+p_val <- x$coefficient[2,4]
+p_val
 ```
 
 8. Construct 95% confidence intervals for the slope and intercept parameters and interpret these intervals
