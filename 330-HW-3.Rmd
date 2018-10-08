@@ -1,6 +1,6 @@
 ---
 title: "330-HW-3"
-author: "Chris Trippe"
+author: "Chris Trippe and Ethan Kemeny"
 date: "10/5/2018"
 output: html_document
 ---
@@ -29,9 +29,25 @@ necessary graphics and relevant summary statistics that would suggest an SLR mod
 successful at achieving the goals of the study.
 
 ```{r}
-##linear?
 ggplot(water_data, aes(Precip, Runoff)) + geom_point()
 
+#check correlation, is it linear?
+cor(water_data$Precip, water_data$Runoff)
+
+##linear model for raw data
+slr_water <- lm(Runoff~Precip, water_data)
+
+
+#test for variance
+bptest(slr_water)
+
+#test for normality
+ks.test(stdres(slr_water),"pnorm" )
+
+cook_dist <- cooks.distance(slr_water)
+outliers <- which(cook_dist > 4/length(cook_dist))
+plot(cook_dist, type="h", main = "Cook's Distance")
+abline(h = 4/length(cook_dist), col = "red")
 
 ```
 
@@ -74,6 +90,7 @@ ggplot(water_data,aes(Precip, Runoff)) +geom_point() + geom_line(aes(y = slr_tra
 5. List then justify your model assumptions using appropriate graphics or summary statistics.
 
 ```{r}
+cor(water_data$Precip, log(water_data$Runoff))
 #test for variance
 bptest(slr_transform)
 #test for normality
@@ -103,7 +120,7 @@ abline(h = 4/length(cook_dist), col = "red")
 n_cv <- 1000 #number of cross validations
 bias_vec <- rep(NA, n_cv) #vector for biases
 rpmse_vec <- rep(NA, n_cv) #vector for rpmse
-n_test <- 10 #size of test set
+n_test <- 15 #size of test set
 
 for(i in 1:n_cv){
    
