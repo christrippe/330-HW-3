@@ -115,10 +115,10 @@ All of these assumptions were checked in part 2. The only questionable assumptio
 ).
 
 ```{r, echo = FALSE}
-n_cv <- 1000 #number of cross validations
+n_cv <- 250 #number of cross validations
 bias_vec <- rep(NA, n_cv) #vector for biases
 rpmse_vec <- rep(NA, n_cv) #vector for rpmse
-n_test <- 15 #size of test set
+n_test <- round(.1 * nrow(water_data)) #size of test set
 
 for(i in 1:n_cv){
    
