@@ -16,7 +16,7 @@ library(lmtest)
 
 1.
 
-Droughts are a big problem in California. Stream runoff from snowfall is one source of water. A statistical model could be used to predict the expected amount of runoff in acre-feet of a river near Bishop. California by the amount of snowfall at a site in the Sierra Nevada mountains. If the amount of water entering the area is estimated, people such as engineers, planners, and policy makers will be able to do their jobs more efficiently.
+Droughts are a big problem in California. Stream runoff from snowfall is one source of water. A statistical model could be used to predict the expected amount of runoff in acre-feet of a river near Bishop, California by the amount of snowfall at a site in the Sierra Nevada mountains. If the amount of water entering the area is estimated, people such as engineers, planners, and policy makers will be able to do their jobs more efficiently.
 
 ```{r}
 ##read in data
@@ -30,20 +30,38 @@ successful at achieving the goals of the study.
 
 ```{r}
 ggplot(water_data, aes(Precip, Runoff)) + geom_point()
+```
 
+
+```{r}
 #check correlation, is it linear?
 cor(water_data$Precip, water_data$Runoff)
+```
 
+The relationship is relatively strong and positive with a correlation of 0.938. As snowfall increases the amount of runoff increases. 
+
+```{r}
 ##linear model for raw data
 slr_water <- lm(Runoff~Precip, water_data)
+```
 
 
+
+```{r}
 #test for variance
 bptest(slr_water)
+```
 
+According to the Breusch-Pagan test, the p-value is 0.3107 which means we fail to reject the null hypothesis and the residuals can be considered to have equal variance.
+
+```{r}
 #test for normality
 ks.test(stdres(slr_water),"pnorm" )
+```
 
+According to the Kolmogorov-Smirnov test, the p-value is 0.621 which means we fail to reject the null hypothesis and the residuals can be considered approximately normal about the fitted line. 
+
+```{r}
 cook_dist <- cooks.distance(slr_water)
 outliers <- which(cook_dist > 4/length(cook_dist))
 plot(cook_dist, type="h", main = "Cook's Distance")
@@ -51,66 +69,46 @@ abline(h = 4/length(cook_dist), col = "red")
 
 ```
 
-3. Write out (in mathematical form with greek letters) a justifiable SLR model that would help answer
-the questions in problem. Provide an interpretation of each mathematical term (β parameter) included
-in your model. Using the mathematical form, discuss how your model, after fitting it to the
-data, will be able to answer the questions in this problem.
+There are only two outliers, only one of which is extreme.
 
-$$\ln({\hat{y_i}}) = \beta_0 + \beta_1x_i + \epsilon_i \text{ where } \epsilon_i \sim \mathcal{N}(\mu,\,\sigma^{2})  $$
+The only questionable assumption is independence. Temperature, and thus the amount of snowfall, is going to be similar year to year, so the amount of runoff might not be independent of the amount of runoff from the previous year. However, we feel safe enough to proceed without manipulating the given data.
 
-4. Fit your model in #3 to the water data and summarize the results by displaying the fitted model in
-equation form (do NOT just provide a screen shot of the R or Python output). Interpret each of the
-fitted parameters in the context of the problem. Provide a plot of the data with a fitted regression
-line.
+3. 
 
+$$y_i = \beta_0 + \beta_1x_i + \epsilon_i \text{ where } \epsilon_i \sim \mathcal{N}(\mu,\,\sigma^{2})  $$
+$y_i$ is the amount of runoff in acre-feet of a river near Bishop, California from the $i^{th}$ year.
+$x_i$ is the amount of snowfall in inches at a site in the Sierra Nevada mountains from the $i^{th}$ year.
+$\beta_0$ is the y-intercept; on average, what you would expect the amount of runoff to be if the amount of snowfall in inches was 0.
+$\beta_1$ is the slope coefficient; as the snowfall increases by 1 inch, the amount of runoff is expected to increase by $\beta_1$ acre-feet, on average.
+$\epsilon_i$ is the residual; the error associated with the $i^{th}$ observation.
+
+When the amount of snowfall is plugged into the the above formula, it will provide an estimated amount of runoff. This estimate will help enginners, plonners, and policy holders more effectively do their jobs.
+
+4. 
 
 ```{r include=FALSE}
-#transformed data
-slr_transform <- lm(log(Runoff) ~ (Precip), water_data)
 #Intercept and Slope values
-slr_transform$coefficients
-#creates vector of y values given coefficients for plotting the line
-slr_transform_yvalues <- (slr_transform$coefficients[1] + (slr_transform$coefficients[2] * water_data$Precip)) %>% exp()
+slr_water$coefficients
 
 ```
 
 
-$$\ln({\hat{y_i}}) = 10.60400764 + 0.04497591 x_i $$
-or
-$${\hat{y_i}} = e^{10.60400764 + 0.04497591 x_i} $$
+$$\hat{y_i} = 27014.587 + 3752.486 x_i $$
 
 
 ```{r}
 #plots new transformed slr on original scale
-ggplot(water_data,aes(Precip, Runoff)) +geom_point() + geom_line(aes(y = slr_transform_yvalues), color = "Red")
+ggplot(water_data,aes(Precip, Runoff)) +geom_point() + geom_smooth(se = FALSE,method = "lm")
 ```
 
-
+$\beta_0$ is the y-intercept; on average, the amount of runoff will be 27014.587 acre-feet, when the amount of snowfall in inches is 0.
+$\beta_1$ is the slope coefficient; as the snowfall increases by 1 inch, the amount of runoff is expected to increase by 3752.486 acre-feet, on average.
 
 5. List then justify your model assumptions using appropriate graphics or summary statistics.
 
-```{r}
-cor(water_data$Precip, log(water_data$Runoff))
-#test for variance
-bptest(slr_transform)
-#test for normality
-ks.test(stdres(slr_transform),"pnorm" )
-#test for outliers
-cook_dist <- cooks.distance(slr_transform)
-outliers <- which(cook_dist > 4/length(cook_dist))
-plot(cook_dist, type="h", main = "Cook's Distance")
-abline(h = 4/length(cook_dist), col = "red")
+The assumptions are that the fitted model is linear, the amount of runoff for any observation is independent of all other runoff observations, the residuals are approximately normally distributed about the fitted line, and the variance of the residuals is equal about the fitted line. 
 
-# 
-# stdres(slr_transform) %>% hist()
-# 
-# ggplot(data = slr_transform, aes(x = slr_transform$fitted.values, y = slr_transform$residuals)) +
-#   geom_point() + ylab("Residuals") + xlab("Fitted Values") +
-#   geom_hline(yintercept = 0)
-# 
-
-
-```
+All of these assumptions were checked in part 2. The only questionable assumption is independence which we will consider inconsequential and move forward with the analysis.
 
 6. Assess the fit and predictive capability of your model. Discuss on the level of your target audience
 (e.g. interpret your model R2
@@ -132,10 +130,10 @@ for(i in 1:n_cv){
   train_set <- water_data[-test_obs,]
   
   #Using training data to fit a model
-  train_lm <- lm(log(Runoff)~Precip, data = train_set)
+  train_lm <- lm(Runoff~Precip, data = train_set)
   
   #Predict test set
-  test_preds <- exp(predict.lm(train_lm, newdata = test_set))
+  test_preds <- predict.lm(train_lm, newdata = test_set)
   
   #Calculate bias
   bias_vec[i] <- mean(test_preds - test_set$Runoff)
@@ -150,6 +148,15 @@ for(i in 1:n_cv){
 paste0("R squared equals ",summary(slr_transform)$r.squared) %>% writeLines()
 paste0("The bias is ", mean(bias_vec)) %>% writeLines()
 paste0("The root predicted mean square error is ", mean(rpmse_vec)) %>% writeLines()
+```
+
+```{r}
+cat("R squared interpretation:\n")
+cat(round(summary(slr_water)$r.squared*100, 1), "percent of the variation in the amount of runoff is explained away by the amount of snowfall.")
+cat("Bias interpretation:")
+cat("On average, the predictions for runoff are", mean(bias_vec) ,"acre-feet too high.")
+cat("Root predicted mean square error interpretation:")
+cat("On average, the predicted runoff amounts are off by", mean(rpmse_vec), "feet.")
 ```
 
 
