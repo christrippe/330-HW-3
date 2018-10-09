@@ -18,7 +18,7 @@ library(lmtest)
 
 Droughts are a big problem in California. Stream runoff from snowfall is one source of water. A statistical model could be used to predict the expected amount of runoff in acre-feet of a river near Bishop, California by the amount of snowfall at a site in the Sierra Nevada mountains. If the amount of water entering the area is estimated, people such as engineers, planners, and policy makers will be able to do their jobs more efficiently.
 
-```{r}
+```{r, echo = FALSE, fig.width = 6, fig.height = 4}
 ##read in data
 water_data <- read.table(file = "water.txt", header = TRUE, sep = "")
 ```
@@ -28,40 +28,40 @@ linear regression (SLR) model is suitable to analyze the water data. Justify you
 necessary graphics and relevant summary statistics that would suggest an SLR model would be
 successful at achieving the goals of the study.
 
-```{r}
+```{r, echo = FALSE, fig.width = 3, fig.height = 2}
 ggplot(water_data, aes(Precip, Runoff)) + geom_point()
 ```
 
 
-```{r}
+```{r, echo = FALSE}
 #check correlation, is it linear?
 cor(water_data$Precip, water_data$Runoff)
 ```
 
 The relationship is relatively strong and positive with a correlation of 0.938. As snowfall increases the amount of runoff increases. 
 
-```{r}
+```{r, echo = FALSE}
 ##linear model for raw data
 slr_water <- lm(Runoff~Precip, water_data)
 ```
 
 
 
-```{r}
+```{r, echo = FALSE}
 #test for variance
 bptest(slr_water)
 ```
 
 According to the Breusch-Pagan test, the p-value is 0.3107 which means we fail to reject the null hypothesis and the residuals can be considered to have equal variance.
 
-```{r}
+```{r, echo = FALSE}
 #test for normality
 ks.test(stdres(slr_water),"pnorm" )
 ```
 
 According to the Kolmogorov-Smirnov test, the p-value is 0.621 which means we fail to reject the null hypothesis and the residuals can be considered approximately normal about the fitted line. 
 
-```{r}
+```{r, echo = FALSE, fig.width = 3, fig.height = 2.5}
 cook_dist <- cooks.distance(slr_water)
 outliers <- which(cook_dist > 4/length(cook_dist))
 plot(cook_dist, type="h", main = "Cook's Distance")
@@ -86,7 +86,7 @@ When the amount of snowfall is plugged into the the above formula, it will provi
 
 4. 
 
-```{r include=FALSE}
+```{r, echo = FALSE}
 #Intercept and Slope values
 slr_water$coefficients
 
@@ -96,7 +96,7 @@ slr_water$coefficients
 $$\hat{y_i} = 27014.587 + 3752.486 x_i $$
 
 
-```{r}
+```{r, echo = FALSE, fig.width = 3, fig.height = 2}
 #plots new transformed slr on original scale
 ggplot(water_data,aes(Precip, Runoff)) +geom_point() + geom_smooth(se = FALSE,method = "lm")
 ```
@@ -114,7 +114,7 @@ All of these assumptions were checked in part 2. The only questionable assumptio
 (e.g. interpret your model R2
 ).
 
-```{r}
+```{r, echo = FALSE}
 n_cv <- 1000 #number of cross validations
 bias_vec <- rep(NA, n_cv) #vector for biases
 rpmse_vec <- rep(NA, n_cv) #vector for rpmse
@@ -144,13 +144,13 @@ for(i in 1:n_cv){
 ```
 
 
-```{r echo=FALSE, comment=""}
-paste0("R squared equals ",summary(slr_transform)$r.squared) %>% writeLines()
+```{r, echo=FALSE, comment=""}
+paste0("R squared equals ",summary(slr_water)$r.squared) %>% writeLines()
 paste0("The bias is ", mean(bias_vec)) %>% writeLines()
 paste0("The root predicted mean square error is ", mean(rpmse_vec)) %>% writeLines()
 ```
 
-```{r}
+```{r, echo = FALSE}
 cat("R squared interpretation:\n")
 cat(round(summary(slr_water)$r.squared*100, 1), "percent of the variation in the amount of runoff is explained away by the amount of snowfall.")
 cat("Bias interpretation:")
@@ -163,22 +163,45 @@ cat("On average, the predicted runoff amounts are off by", mean(rpmse_vec), "fee
 7. Carry out a test that there is no relationship between snowfall and runoff (i.e., write out the hypotheses,
 report an appropriate p-value, and conclude in context).
 
-```{r}
+$H_0: \beta_1 = 0$
+$H_{\alpha}: \beta_1 \ne 0$
+
+```{r, echo = FALSE}
 #gets the summary stats of the original slr, coeffucients contains the pvalues for hypothesis test in the fourth column
 
-x <- summary(lm(Runoff~Precip,water_data))
-p_val <- x$coefficient[2,4]
+p_val <- summary(lm(Runoff~Precip,water_data))$coefficient[2,4]
 p_val
 ```
+
+Since the p-value approximates zero and is less than $\alpha =$ 0.5, we reject the null hypothesis that there is no relationship between amount of snowfall and amount of runoff.
+
 
 8. Construct 95% confidence intervals for the slope and intercept parameters and interpret these intervals
 in the context of the problem.
 
-```{r}
-
+```{r, echo = FALSE}
+confint(slr_water, level = 0.95)
 ```
+
+We are 95% confident that a 1 inch increase in snowfall would increase runoff by between 3316.809 and 4188.162 acre-feet, on average.
+
+We are 95% confident that when snowfall is 0 inches, runoff would be between 20513.978 and 33515.197 acre-feet.
 
 9. In a recent winter, the site only received 4.5 inches of snowfall. What do you predict will be the
 associated runoff? Provide a 95% predictive interval and interpret the interval in the context of the
 problem. Do you have any hesitations performing this prediction (hint: you should)? Describe these
 hesitations and their potential impact on your prediction.
+
+```{r, echo = FALSE}
+cat("Range for snowfall values:")
+range(water_data$Precip)
+```
+
+
+```{r, echo = FALSE}
+dframe <- data.frame(Precip = 4.5)
+pred_values <- predict.lm(slr_water, dframe, interval = "prediction", level = 0.95)
+pred_values
+```
+
+When using the fitted model, we are 95% confident that if snowfall is 4.5 inches, the amonut of runoff will be between 25254.2 and 62547.34 acre-feet. However, predicting for  4.5 inches would be extrapolating. The fitted model was developed on snowfall values that ranged from 4.6 to 33.07. We don't know how accurately our model estimates runoff amounts outside the given range. Therefore, the prediction interval cannot be guaranteed to give accurate results. 
