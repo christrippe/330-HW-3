@@ -1,0 +1,142 @@
+---
+title: "330-HW-3-appendix"
+author: "Chris Trippe and Ethan Kemeny"
+date: "10/9/2018"
+output: html_document
+---
+```{r, echo = TRUE, results = "hide", fig.show = "hide", message = FALSE}
+##libraries
+library(tidyverse)
+library(MASS)
+library(lmtest)
+
+#####
+##1##
+#####
+
+##read in data
+water_data <- read.table(file = "water.txt", header = TRUE, sep = "")
+```
+
+
+```{r, echo = TRUE, results = "hide", fig.show = "hide", message = FALSE}
+#####
+##2##
+#####
+
+#scatter plot
+ggplot(water_data, aes(Precip, Runoff)) + geom_point()
+
+#check correlation, is it linear?
+cor(water_data$Precip, water_data$Runoff)
+
+##linear model for raw data
+slr_water <- lm(Runoff~Precip, water_data)
+
+#test for variance
+bptest(slr_water)
+
+#test for normality
+ks.test(stdres(slr_water),"pnorm" )
+
+#check for outliers
+cook_dist <- cooks.distance(slr_water)
+outliers <- which(cook_dist > 4/length(cook_dist))
+plot(cook_dist, type="h", main = "Cook's Distance")
+abline(h = 4/length(cook_dist), col = "red")
+```
+
+
+```{r, echo = TRUE, results = "hide", fig.show = "hide", message = FALSE}
+#####
+##4##
+#####
+
+#Intercept and Slope values
+slr_water$coefficients
+
+#plots slr against scatter plot
+ggplot(water_data,aes(Precip, Runoff)) +geom_point() + geom_smooth(se = FALSE,method = "lm")
+```
+
+
+```{r, echo = TRUE, results = "hide", fig.show = "hide", message = FALSE}
+#####
+##6##
+#####
+
+n_cv <- 250 #number of cross validations
+bias_vec <- rep(NA, n_cv) #vector for biases
+rpmse_vec <- rep(NA, n_cv) #vector for rpmse
+n_test <- round(.1 * nrow(water_data)) #size of test set, 10% of data se
+
+for(i in 1:n_cv){
+   
+  #choose which obs. to put in test set
+  test_obs <- sample(1:nrow(water_data), n_test)
+  
+  #Split data into test and training sets
+  test_set <- water_data[test_obs,]
+  train_set <- water_data[-test_obs,]
+  
+  #Using training data to fit a model
+  train_lm <- lm(Runoff~Precip, data = train_set)
+  
+  #Predict test set
+  test_preds <- predict.lm(train_lm, newdata = test_set)
+  
+  #Calculate bias
+  bias_vec[i] <- mean(test_preds - test_set$Runoff)
+  
+  #Calculate RPMSE
+  rpmse_vec[i] <- sqrt(mean((test_preds - test_set$Runoff)^2))
+}
+
+paste0("R squared equals ",summary(slr_water)$r.squared) %>% writeLines()
+paste0("The bias is ", mean(bias_vec)) %>% writeLines()
+paste0("The root predicted mean square error is ", mean(rpmse_vec)) %>% writeLines()
+
+cat("R squared interpretation:\n")
+cat(round(summary(slr_water)$r.squared*100, 1), "percent of the variation in the amount of runoff is explained away by the amount of snowfall.")
+cat("Bias interpretation:")
+cat("On average, the predictions for runoff are", mean(bias_vec) ,"acre-feet too high.")
+cat("Root predicted mean square error interpretation:")
+cat("On average, the predicted runoff amounts are off by", mean(rpmse_vec), "feet.")
+```
+
+
+```{r, echo = TRUE, results = "hide", fig.show = "hide", message = FALSE}
+#####
+##7##
+#####
+
+#gets the summary stats of the original slr, coefficients contains the pvalues for hypothesis test in the fourth column
+
+p_val <- summary(lm(Runoff~Precip,water_data))$coefficient[2,4]
+p_val
+```
+
+
+```{r, echo = TRUE, results = "hide", fig.show = "hide", message = FALSE}
+#####
+##8##
+#####
+
+#confidence interval for the coefficients
+confint(slr_water, level = 0.95)
+```
+
+
+```{r, echo = TRUE, results = "hide", fig.show = "hide", message = FALSE}
+#####
+##9##
+#####
+
+cat("Range for snowfall values:")
+range(water_data$Precip)
+
+dframe <- data.frame(Precip = 4.5)
+pred_values <- predict.lm(slr_water, dframe, interval = "prediction", level = 0.95)
+pred_values
+```
+

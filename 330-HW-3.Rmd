@@ -77,9 +77,13 @@ The only questionable assumption is independence. Temperature, and thus the amou
 
 $$y_i = \beta_0 + \beta_1x_i + \epsilon_i \text{ where } \epsilon_i \sim \mathcal{N}(\mu,\,\sigma^{2})  $$
 $y_i$ is the amount of runoff in acre-feet of a river near Bishop, California from the $i^{th}$ year.
+
 $x_i$ is the amount of snowfall in inches at a site in the Sierra Nevada mountains from the $i^{th}$ year.
+
 $\beta_0$ is the y-intercept; on average, what you would expect the amount of runoff to be if the amount of snowfall in inches was 0.
+
 $\beta_1$ is the slope coefficient; as the snowfall increases by 1 inch, the amount of runoff is expected to increase by $\beta_1$ acre-feet, on average.
+
 $\epsilon_i$ is the residual; the error associated with the $i^{th}$ observation.
 
 When the amount of snowfall is plugged into the the above formula, it will provide an estimated amount of runoff. This estimate will help enginners, plonners, and policy holders more effectively do their jobs.
@@ -97,11 +101,12 @@ $$\hat{y_i} = 27014.587 + 3752.486 x_i $$
 
 
 ```{r, echo = FALSE, fig.width = 3, fig.height = 2}
-#plots new transformed slr on original scale
+#plots slr against scatter plot
 ggplot(water_data,aes(Precip, Runoff)) +geom_point() + geom_smooth(se = FALSE,method = "lm")
 ```
 
 $\beta_0$ is the y-intercept; on average, the amount of runoff will be 27014.587 acre-feet, when the amount of snowfall in inches is 0.
+
 $\beta_1$ is the slope coefficient; as the snowfall increases by 1 inch, the amount of runoff is expected to increase by 3752.486 acre-feet, on average.
 
 5. List then justify your model assumptions using appropriate graphics or summary statistics.
@@ -164,10 +169,11 @@ cat("On average, the predicted runoff amounts are off by", mean(rpmse_vec), "fee
 report an appropriate p-value, and conclude in context).
 
 $H_0: \beta_1 = 0$
+
 $H_{\alpha}: \beta_1 \ne 0$
 
 ```{r, echo = FALSE}
-#gets the summary stats of the original slr, coeffucients contains the pvalues for hypothesis test in the fourth column
+#gets the summary stats of the original slr, coefficients contains the pvalues for hypothesis test in the fourth column
 
 p_val <- summary(lm(Runoff~Precip,water_data))$coefficient[2,4]
 p_val
@@ -199,6 +205,7 @@ range(water_data$Precip)
 
 
 ```{r, echo = FALSE}
+##creating a prediction interval
 dframe <- data.frame(Precip = 4.5)
 pred_values <- predict.lm(slr_water, dframe, interval = "prediction", level = 0.95)
 pred_values
